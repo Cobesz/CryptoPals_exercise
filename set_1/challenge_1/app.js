@@ -1,17 +1,18 @@
 var btoa = require('btoa');
 
 
-function toHex(str) {
-    var hex = '';
-    for(var i=0;i<str.length;i++) {
-        hex += ''+str.charCodeAt(i).toString(16);
+function hexToString (hex) {
+    var string = '';
+    for (var i = 0; i < hex.length; i += 2) {
+        string += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
     }
-    return hex;
+    return string;
 }
 
-let hex = toHex('49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d');
+let hex = hexToString('49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d');
 
-let result = btoa(hex);
-console.log(toHex('49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d'));
+console.log(hex);
 
-console.log(result);
+let base64String = btoa(hex);
+
+console.log(base64String);
