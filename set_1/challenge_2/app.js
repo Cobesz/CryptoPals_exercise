@@ -15,10 +15,11 @@ let results = [];
 
 //loop through the first array
 for (let i = 0; i < hex1.length; i++) {
-
     // add xor of each first element to the results array
     results.push(hex1[i] ^ hex2[i])
 }
+
+console.log(results);
 // make a new buffer and translatre is back to a hexString
 let resultsToHex = new Buffer(results).toString('hex');
 
