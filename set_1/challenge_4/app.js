@@ -43,7 +43,7 @@ function decrypt(bufferedInput) {
     let candidates = [];
     //declare a variable for the XORing.
     let payload;
-                    // all 256 characters in asci table
+    // all 256 characters in asci table
     for (let i = 0; i < 256; i++) {
 
         //fires the xor function with the input and the character(s) from the loop integerx
@@ -59,15 +59,17 @@ function decrypt(bufferedInput) {
         })
     }
 
-    return candidates.sort(function(a, b) {
-        return b.score - a.score
+    //The result of the function gets sorted on score. Highest first, so candidates[0] gives the correct output.
+
+    return candidates.sort(function (lowest, highest) {
+        return highest.score - lowest.score
     })
 }
 
 //this function takes the input one at a time and splits it on the whitespace/enter key.
 //it returns an object with the payload, string and score.
 let candidates = input.split('\n')
-    .map(function(input) {
+    .map(function (input) {
         //creates a buffer which can be used to xor with
         let bufferedInput = new Buffer(input, 'hex');
 
@@ -75,8 +77,11 @@ let candidates = input.split('\n')
         //it returns the first result in the created array.
         return decrypt(bufferedInput)[0];
     })
-    .sort(function(lowest, highest) {
+    .sort(function (lowest, highest) {
         return highest.score - lowest.score
     });
 
-console.log(candidates[0]);
+//outputs 'Now that the party is jumping\n', the replace function will remove the ugly \n
+let result = candidates[0].string.replace('\n', '');
+
+console.log(result);
