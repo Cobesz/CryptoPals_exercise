@@ -40,21 +40,19 @@ function xor(key) {
     return new Buffer(results).toString()
 }
 
-//            Hier worden alle keys (dus a, b, c, etc) stuk voor stuk door de xor functie gegooid.
+// Hier worden alle keys (dus a, b, c, etc) stuk voor stuk door de xor functie gegooid.
 let decrypt = keys.map(function (key) {
     let result = xor(key);
     // hier wordt de score functie uitgevoerd met de results als parameter.
     return {result: result, score: score(result)}
 })  //Hier wordt het resultaat van de xor functie met de hoogste score gesorteerd, zodat deze als eerste in de array terug komt.
 // Dit is ook de reden dat je de juiste waarde terug krijgt als je decrypt[0] uitvoert.
-    .sort(function (a, b) {
-        return b.score - a.score
+    .sort(function (lowest, highest) {
+        return highest.score - lowest.score
     });
 
-
-// console.log(decrypt);
-
-// console.log(inputBuffer);
 console.log(JSON.stringify(decrypt[0], null, 2));
+
+
 // Hex strings omzetten naar binary, vervolgens kijken welke niet overeenkomen met letters en cijfers
 // Die eruit flikkeren en dan t hele zooitje weer omzetten naar Hex en vervolgens dan text
