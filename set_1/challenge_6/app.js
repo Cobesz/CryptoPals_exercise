@@ -17,7 +17,6 @@ function xor(payload, key) {
         index = i % key.length;
         results.push(payload[i] ^ key[index])
     }
-
     return new Buffer(results)
 }
 
@@ -34,7 +33,6 @@ function mapPairs(coll, fn) {
     forEachPair(coll, function (a, b) {
         result.push(fn(a, b))
     });
-
     return result
 }
 
@@ -71,21 +69,21 @@ function hammingsDistance(x, y) {
     return bufferPopCount(xor(x, y))
 }
 
-// subsequently moved to utils
-function getBlocks(input, size, n) {
+function getBlocks(input, size, nBlocks) {
     let blocks = [];
     let index;
 
-    if (n === undefined) {
-        n = Math.ceil(input.length / size)
+    if (nBlocks === undefined) {
+        nBlocks = Math.ceil(input.length / size)
     }
 
-    for (let i = 0; i < n; i++) {
-        index = i * size;
-        blocks.push(input.slice(index, index + size))
+    for (let i = 0; i < nBlocks; i++) {
+        //first time = 0 * 2
+        index = i * size; // index = 0 for first time
+        blocks.push(input.slice(index, index + size)) //
     }
 
-    return blocks
+    return blocks;
 }
 
 // returns the normalized edit distance between blocks of `size`
@@ -97,25 +95,27 @@ function testKeySize(input, size, nBlocks) {
 }
 
 // returns the 3 most likely key sizes for input
+// input is the whole txt file which is epicly long. An array of 2876 object to be exact
+//the function tests the input and returns the 3 key sizes that are most likely to be the correct ones to be used.
 function findKeySizes(input) {
     let nBlocks = 10; // number of blocks to compare
     let results = [];
 
-    for (let i = 2; i <= 40; i++) {
+    for (let size = 2; size <= 40; size++) {
         results.push({
-            size: i,
-            distance: testKeySize(input, i, nBlocks)
+            size: size,
+            distance: testKeySize(input, size, nBlocks)
         })
     }
 
+    // sort the results based on the lowest distance
     return results
-        .sort(function (a, b) {
-            return a.distance - b.distance
+        .sort(function (highest, lowest) {
+            return highest.distance - lowest.distance
         })
-        .slice(0, 3)
 }
 
-// transposes blocks into a block for each index (a la lodash.zip)
+// transposes blocks into a block for each index
 function transposeBlocks(blocks) {
     let max = blocks[0].length;
     let transposed = [];
@@ -128,30 +128,33 @@ function transposeBlocks(blocks) {
         }
         transposed.push(new Buffer(block))
     }
-
     return transposed
 }
-
+// the whole input file in base64 and the keysize with the lowest distance
 function breakXor(input, keySize) {
+    //returns the chopped up version of the inputs file.
     let blocks = getBlocks(input, keySize);
+
+    // returns a huge array with each block as object. each block is a line in the song text
     let transposedBlocks = transposeBlocks(blocks);
 
     let keyBytes = transposedBlocks.map(breakSingleByteXor);
     let key = new Buffer(keyBytes);
-
     return {
         keySize: keySize,
         key: key,
+        // once again XOR the entire input with the correct key.
         plaintext: xor(input, key)
     }
 }
 
-function breakSingleByteXor(ciphertext) {
+function breakSingleByteXor(transposedBlock) {
     let candidates = [];
     let payload;
 
+    //compare each block (line in songtext) with all possible asci characters
     for (let i = 0; i < 256; i++) {
-        payload = xor(ciphertext, [i]);
+        payload = xor(transposedBlock, [i]);
         candidates.push({key: i, score: scoreText(payload)})
     }
 
@@ -170,12 +173,18 @@ function scoreText(input) {
     return score / input.length
 }
 
-// console.log( hammingsDistance(new Buffer('this is a test'), new Buffer('wokka wokka!!!')) === 37 )
 
-let b = new Buffer(input, 'base64');
-let keySizes = findKeySizes(b);
-let decrypted = breakXor(b, keySizes[0].size);
+let bufferedInput = new Buffer(input, 'base64');
 
+//find the key sizes that can be used in the decryption
+let keySizes = findKeySizes(bufferedInput);
+// console.log(keySizes[0]);
+//fire the breakXor function with the key size that has the lowest distance.
+let decrypted = breakXor(bufferedInput, keySizes[0].size);
+
+// console.log(decrypted);
+
+// decrypted.key is the key we found out above
 console.log('key: ' + decrypted.key.toString());
-console.log();
+// plaintext is the whole input file XORed with the key from above.
 console.log(decrypted.plaintext.toString());
